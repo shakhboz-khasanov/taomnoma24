@@ -1,0 +1,22 @@
+# git
+.git
+.gitignore
+
+# Exclude Docker files
+.docker
+Dockerfile*
+docker-compose*
+.dockerignore
+
+# Exclude local development files
+.vscode/
+.idea/
+
+# python
+app/__pycache__/
+app/*/__pycache__/
+app/*/*/__pycache__/
+app/*/*/*/__pycache__/
+.env/
+.venv/
+venv/
