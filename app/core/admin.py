@@ -45,4 +45,15 @@ class UserAdmin(BaseUserAdmin):
     )
 
 
+class RecipeAdmin(admin.ModelAdmin):
+    """
+    Defines the admin pages for recipes
+    """
+    ordering = ['id']
+    list_display = ['title', 'user', 'time_minutes', 'price']
+    list_filter = ['user', 'time_minutes', 'price']
+    search_fields = ['title', 'description']
+
+
 admin.site.register(models.User, UserAdmin)
+admin.site.register(models.Recipe, RecipeAdmin)
