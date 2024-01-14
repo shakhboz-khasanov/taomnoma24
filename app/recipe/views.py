@@ -37,9 +37,14 @@ class RecipeViewSet(viewsets.ModelViewSet):
         return self.serializer_class
 
 
-class TagViewSet(viewsets.GenericViewSet,
-                 mixins.ListModelMixin,
-                 mixins.CreateModelMixin):
+class TagViewSet(
+    mixins.ListModelMixin,
+    mixins.CreateModelMixin,
+    mixins.UpdateModelMixin,
+    mixins.RetrieveModelMixin,
+    mixins.DestroyModelMixin,
+    viewsets.GenericViewSet,
+):
     """viewset for tag objects apis"""
 
     serializer_class = serializers.TagSerializer

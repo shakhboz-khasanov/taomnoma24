@@ -7,22 +7,6 @@ from core.models import (
 )
 
 
-class RecipeSerializer(serializers.ModelSerializer):
-    """serializer class for recipe objects"""
-
-    class Meta:
-        model = Recipe
-        fields = ('id', 'title', 'time_minutes', 'price', 'link')
-        read_only_fields = ('id',)
-
-
-class RecipeDetailSerializer(RecipeSerializer):
-    """serializer class for recipe detail objects"""
-
-    class Meta(RecipeSerializer.Meta):
-        fields = RecipeSerializer.Meta.fields + ('description',)
-
-
 class TagSerializer(serializers.ModelSerializer):
     """serializer class for tag objects"""
 
@@ -30,3 +14,34 @@ class TagSerializer(serializers.ModelSerializer):
         model = Tag
         fields = ('id', 'name')
         read_only_fields = ('id',)
+
+
+class RecipeSerializer(serializers.ModelSerializer):
+    """serializer class for recipe objects"""
+    tags = TagSerializer(many=True, required=False)
+
+    class Meta:
+        model = Recipe
+        fields = ('id', 'title', 'time_minutes', 'price', 'link', 'tags')
+        read_only_fields = ('id',)
+
+    def create(self, validated_data):
+        """create a new recipe"""
+        tags = validated_data.pop('tags', [])
+        recipe = Recipe.objects.create(**validated_data)
+        author = self.context['request'].user
+        for tag in tags:
+            tag_obj, created = Tag.objects.get_or_create(
+                user=author,
+                **tag,
+            )
+            recipe.tags.add(tag_obj)
+
+        return recipe
+
+
+class RecipeDetailSerializer(RecipeSerializer):
+    """serializer class for recipe detail objects"""
+
+    class Meta(RecipeSerializer.Meta):
+        fields = RecipeSerializer.Meta.fields + ('description',)

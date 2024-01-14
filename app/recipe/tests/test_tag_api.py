@@ -7,10 +7,16 @@ from django.test import TestCase
 from rest_framework import status
 from rest_framework.test import APIClient
 
-from core.models import Tag
+from core.models import Tag, Recipe
 from recipe.serializers import TagSerializer
 
 TAGS_URL = reverse('recipe:tag-list')
+RECIPE_URL = reverse('recipe:recipe-list')
+
+
+def detail_url(tag_id):
+    """create and return tag detail url"""
+    return reverse('recipe:tag-detail', args=[tag_id])
 
 
 def create_user(email="test@example.com", password="testpass123"):
@@ -69,3 +75,59 @@ class PrivateTagsApiTests(TestCase):
         self.assertEqual(len(response.data), 1)
         self.assertEqual(response.data[0]["name"], tag.name)
         self.assertEqual(response.data[0]["id"], tag.id)
+
+    def test_update_tag(self):
+        """Test updating a tag."""
+        tag = create_tag(user=self.user)
+
+        payload = {"name": "Updated tag name"}
+
+        url = detail_url(tag.id)
+        res = self.client.patch(url, payload)
+
+        tag.refresh_from_db()
+
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(tag.name, payload["name"])
+
+    def test_delete_tag(self):
+        """Test deleting tag"""
+        tag = create_tag(user=self.user)
+
+        url = detail_url(tag.id)
+        response = self.client.delete(url)
+
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        tags = Tag.objects.filter(user=self.user)
+        self.assertTrue(tags.count, 0)
+
+    def test_create_tag_successful(self):
+        """Test creating a new tag."""
+        payload = {"name": "Test tag"}
+        self.client.post(TAGS_URL, payload)
+
+        exists = Tag.objects.filter(
+            user=self.user,
+            name=payload["name"]
+        ).exists()
+
+        self.assertTrue(exists)
+
+    def test_create_recipe_with_new_tag(self):
+        """Test creating a recipe with new tag."""
+        payload = {
+            "title": "Test recipe",
+            "time_minutes": 10,
+            "price": 500,
+            "tags": [{"name": "Test tag"}, {"name": "Test tag2"}],
+        }
+        response = self.client.post(RECIPE_URL, payload, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        recipes = Recipe.objects.filter(user=self.user)
+        self.assertEqual(recipes.count(), 1)
+        recipe = recipes[0]
+        self.assertEqual(recipe.tags.count(), 2)
+
+        for tag in recipe.tags.all():
+            self.assertIn(tag.name, ["Test tag", "Test tag2"])
