@@ -55,5 +55,15 @@ class RecipeAdmin(admin.ModelAdmin):
     search_fields = ['title', 'description']
 
 
+class TagAdmin(admin.ModelAdmin):
+    """
+    Defines the admin pages for tags
+    """
+    ordering = ['-id']
+    list_display = ['name', 'user']
+    search_fields = ['name']
+
+
 admin.site.register(models.User, UserAdmin)
 admin.site.register(models.Recipe, RecipeAdmin)
+admin.site.register(models.Tag)
