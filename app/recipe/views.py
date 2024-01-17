@@ -10,6 +10,7 @@ from rest_framework.permissions import IsAuthenticated
 from core.models import (
     Recipe,
     Tag,
+    Ingridient,
 )
 from recipe import serializers
 
@@ -58,4 +59,28 @@ class TagViewSet(
 
     def perform_create(self, serializer):
         """create a new tag"""
+        serializer.save(user=self.request.user)
+
+
+class IngridientViewSet(
+    mixins.ListModelMixin,
+    mixins.CreateModelMixin,
+    mixins.UpdateModelMixin,
+    mixins.RetrieveModelMixin,
+    mixins.DestroyModelMixin,
+    viewsets.GenericViewSet,
+):
+    """viewset for ingridient objects apis"""
+
+    serializer_class = serializers.IngridientSerializer
+    queryset = Ingridient.objects.all()
+    authentication_classes = (TokenAuthentication,)
+    permission_classes = (IsAuthenticated,)
+
+    def get_queryset(self):
+        """return ingridients for authenticated user"""
+        return self.queryset.filter(user=self.request.user).order_by('-id')
+
+    def perform_create(self, serializer):
+        """create a new ingridient"""
         serializer.save(user=self.request.user)
