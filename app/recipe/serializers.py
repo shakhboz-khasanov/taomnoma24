@@ -39,6 +39,24 @@ class RecipeSerializer(serializers.ModelSerializer):
 
         return recipe
 
+    def update(self, instance, validated_data):
+        """update a recipe"""
+        tags = validated_data.pop('tags', [])
+        recipe = super().update(instance, validated_data)
+        author = self.context['request'].user
+        if author != recipe.user:
+            raise serializers.ValidationError(
+                'You are not the author of this recipe.'
+            )
+        for tag in tags:
+            tag_obj, created = Tag.objects.get_or_create(
+                user=author,
+                **tag,
+            )
+            recipe.tags.add(tag_obj)
+
+        return recipe
+
 
 class RecipeDetailSerializer(RecipeSerializer):
     """serializer class for recipe detail objects"""

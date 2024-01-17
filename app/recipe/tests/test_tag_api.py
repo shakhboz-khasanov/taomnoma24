@@ -131,3 +131,27 @@ class PrivateTagsApiTests(TestCase):
 
         for tag in recipe.tags.all():
             self.assertIn(tag.name, ["Test tag", "Test tag2"])
+
+    def test_update_recipe_with_new_tag(self):
+        """Test updating a recipe with new tag."""
+        tag = create_tag(user=self.user, name="Test tag")
+        recipe = Recipe.objects.create(
+            user=self.user,
+            title="Test recipe",
+            time_minutes=10,
+            price=500,
+        )
+        payload = {
+            "title": "Test recipe",
+            "time_minutes": 10,
+            "price": 500,
+            "tags": [{"name": "Test tag"}, {"name": "Test tag2"}],
+        }
+        url = detail_url(recipe.id)
+        response = self.client.patch(url, payload, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        recipe.refresh_from_db()
+
+        for tag in recipe.tags.all():
+            self.assertIn(tag.name, ["Test tag", "Test tag2"])
